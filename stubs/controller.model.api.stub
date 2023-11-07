@@ -1,0 +1,101 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ namespacedModel }};
+use {{ rootNamespace }}Http\Controllers\Controller;
+use {{ namespacedRequests }}
+
+use App\Traits\ApiResponse;
+use Illuminate\Http\JsonResponse;
+
+class {{ class }} extends Controller
+{
+    use ApiResponse;
+    public function __construct(private SampleService $service){}
+
+    public function all(): JsonResponse
+    {
+        $data = $this->service->all();
+        $metadata['count'] = count($data);
+        if(!$data){
+            return $this->ResponseSuccess([], null, 'No Data Found!');
+        }
+        return $this->ResponseSuccess(
+            new OnboardSlidersCollection($data), $metadata
+        );
+    }
+
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(): JsonResponse
+    {
+        $perPage = request('per_page');
+        $data = $this->service->allPaginate($perPage);
+        $metadata['count'] = count($data);
+        if(!$data){
+            return $this->ResponseSuccess([], null, 'No Data Found!');
+        }
+        return $this->ResponseSuccess(
+            new OnboardSlidersCollection($data), $metadata
+        );
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store({{ storeRequest }} $request)
+    {
+        try {
+            $data = $this->service->store($request);
+            return $this->ResponseSuccess(OnboardSliderResource::make($data));
+        } catch (\Exception $e) {
+            return $this->ResponseError($e->getMessage(), null, 'Data Process Error! Consult Tech Team');
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show({{ model }} ${{ modelVariable }})
+    {
+        $data = $this->service->show($id);
+        if(!$data){
+            return $this->ResponseSuccess([], null, 'No Data Found!');
+        }
+        return $this->ResponseSuccess(
+            OnboardSliderResource::make($data)
+        );
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update({{ updateRequest }} $request, {{ model }} ${{ modelVariable }})
+    {
+        try {
+            $data = $this->service->update($request,$id);
+            return $this->ResponseSuccess(OnboardSliderResource::make($data));
+        } catch (\Exception $e) {
+            return $this->ResponseError($e->getMessage(), null, 'Data Process Error! Consult Tech Team');
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy({{ model }} ${{ modelVariable }})
+    {
+        try {
+            $data = $this->service->delete($id);
+            if(!$data){
+                return $this->ResponseSuccess([], null, 'Slider Not Found!', 204);
+            }
+            return $this->ResponseSuccess($data, null, 'Slider successfully delete!', 204);
+
+        } catch (\Exception $e) {
+            return $this->ResponseError($e->getMessage(), null, 'Slider Not Found!');
+        }
+    }
+}
